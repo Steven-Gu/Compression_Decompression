@@ -14,7 +14,7 @@ let is_empty h =  h = empty
 let rec add e h = 
   match h with
   |[] -> e::h
-  |p::ll -> if ( fst e < fst p) then e::p::ll
+  |p::ll -> if compare e p < 0 then e::p::ll
   else p:: add e ll
   
   

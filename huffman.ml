@@ -40,6 +40,7 @@ let compress f =
   arbre l
 
 
+  
 let x = char_freq "freq.txt" 
 let () = Array.iter (Printf.printf"%d ") x
 
