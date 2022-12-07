@@ -1,4 +1,4 @@
-type 'a t 
+type 'a t = 'a list
 
 (** The type of heaps. Elements are ordered using generic comparison.
 *)
