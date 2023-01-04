@@ -5,8 +5,6 @@ type tree =
     | Leaf of int
     | Node of tree*tree
 
-let decompress _ = failwith "todo"
-let compress _ = failwith "todo"
     
 let char_freq f =
 let x = Array.make 256 0 in
@@ -40,46 +38,82 @@ let rec arbre h =
       in
       let () = loop a l in
       x 
-
-  let compress f a = 
-        let fo = open_in(f) in
-        let x = code a in
-        let o = open_out(f^"_compressed") in
-        let os = of_out_channel(o) in
-        let rec combine x s fo = 
-          try
-            let n = input_byte fo in
-            combine x (s^x.(n)) fo
-          with End_of_file -> s
-        in
-        let contenu = combine x "" fo in
-        (**String.iter (fun x -> Printf.printf "%d" (int_of_char x - int_of_char '0') )contenu**)
-        begin
-        String.iter (fun x -> (write_bit os (int_of_char x - int_of_char '0')) )contenu;
-        finalize os 
-        end
-    
-  
-let decompress f a=
-  let fo = open_in f in
-  let fs = of_in_channel fo in
-  let rec loop fo a =
-    let rec loopbis fo a =
+      let rec sauvegarderArbre a os =
         match a with
-        |Leaf(i)->Printf.printf "%c" (char_of_int i);
-        |Node(left,right)-> 
-            let n = read_bit fo in
-            if n = 0 then loopbis fo right
-              else loopbis fo left
-    in
-    try
-      begin
-      loopbis fo a;        
-      loop fo a
-      end
-    with End_of_stream ->Printf.printf"sdfs"
-  in
-  loop fs a
+        |Leaf(i)-> 
+          begin 
+            write_bit os 1;
+            write_int os i
+          end
+        |Node(left,right)->
+          begin
+            write_bit os 0;
+            sauvegarderArbre left os;
+            sauvegarderArbre right os
+          end
+    
+      let rec lireArbre fo =
+        let n = read_bit fo in
+        if n = 1 then Leaf(read_int fo)
+        else
+          let left = lireArbre fo in
+          let right = lireArbre fo in 
+          Node(left,right)
+    
+    
+          let compress f = 
+            let h = char_freq f in
+            let fo = open_in(f) in
+            let rec loop h l n = 
+              if n = 256 then l
+              else if h.(n) != 0 then loop h (add (h.(n),Leaf(n)) l) (n+1)
+              else loop h l (n+1)
+            in
+            let l = loop h [] 0 in
+            let a = arbre l in
+            let x = code a in
+            let o = open_out(f^"_compressed") in
+            let os = of_out_channel(o) in
+            let rec combine x s fo = 
+              try
+                let n = input_byte fo in
+                combine x (s^x.(n)) fo
+              with End_of_file -> s
+            in
+            let contenu = combine x "" fo in
+            begin
+            sauvegarderArbre a os; 
+            String.iter (fun x -> (write_bit os (int_of_char x - int_of_char '0')) )contenu;
+            finalize os
+            end
+        
+        
+    
+            let decompress f =
+              let fo = open_in f in
+              let fs = of_in_channel fo in
+              let a = lireArbre fs in
+              let rec loop fs a =
+                let rec loopbis fs a =
+                    match a with
+                    |Leaf(i)->Printf.printf "%c" (char_of_int i);
+                    |Node(left,right)-> 
+                      let n = read_bit fs in
+                      if n = 0 then loopbis fs left
+                      else loopbis fs right
+                in
+                try
+                  begin
+                  loopbis fs a;
+                  loop fs a
+                  end
+                with End_of_stream ->()
+              in
+              begin
+              loop fs a;
+              Printf.printf"\n"
+              end
+          
 
 
 let test f = 
@@ -97,22 +131,7 @@ in
 loop fs
 
 
-
-    
   
-
-let x = char_freq "freq.txt"
-let rec loop h l n = 
-  if n = 256 then l
-  else if h.(n) != 0 then loop h (add (h.(n),Leaf(n)) l) (n+1)
-  else loop h l (n+1)
-
-let a = arbre (loop x [] 0)
-(**let () = compress "freq.txt" a**)
-
-(**let() = test "freq.txt_compressed"**)
-let () = decompress "freq.txt_compressed" a
-let() = Printf.printf"\n"
 
 
 

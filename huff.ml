@@ -1,4 +1,4 @@
-let main () = Huffman.decompress "fichier" 
+let main () = Huffman.decompress "freq.txt_compressed" 
 
 
 let () = main ()
