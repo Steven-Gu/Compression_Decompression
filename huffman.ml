@@ -5,10 +5,9 @@ type tree =
     | Leaf of int
     | Node of tree*tree
 
-
 let decompress _ = failwith "todo"
 let compress _ = failwith "todo"
-
+    
 let char_freq f =
 let x = Array.make 256 0 in
 let fo = open_in f in
@@ -42,27 +41,80 @@ let rec arbre h =
       let () = loop a l in
       x 
 
-let compress f = 
+  let compress f a = 
+        let fo = open_in(f) in
+        let x = code a in
+        let o = open_out(f^"_compressed") in
+        let os = of_out_channel(o) in
+        let rec combine x s fo = 
+          try
+            let n = input_byte fo in
+            combine x (s^x.(n)) fo
+          with End_of_file -> s
+        in
+        let contenu = combine x "" fo in
+        (**String.iter (fun x -> Printf.printf "%d" (int_of_char x - int_of_char '0') )contenu**)
+        begin
+        String.iter (fun x -> (write_bit os (int_of_char x - int_of_char '0')) )contenu;
+        finalize os 
+        end
+    
+  
+let decompress f a=
   let fo = open_in f in
-  let h = char_freq f in 
-  let rec loop h l n = 
-    if n = 256 then l
-    else if h.(n) != 0 then loop h (add (h.(n),Leaf(n)) l) (n+1)
-    else loop h l (n+1)
-  in
-  let l = loop h [] 0 in
-  let x = code (arbre l) in
-  let rec loop0 x s fo = 
+  let fs = of_in_channel fo in
+  let rec loop fo a =
+    let rec loopbis fo a =
+        match a with
+        |Leaf(i)->Printf.printf "%c" (char_of_int i);
+        |Node(left,right)-> 
+            let n = read_bit fo in
+            if n = 0 then loopbis fo right
+              else loopbis fo left
+    in
     try
-      let n = input_byte fo in
-      x.(n)
-      loop x  fo
-    with End_of_file -> s
+      begin
+      loopbis fo a;        
+      loop fo a
+      end
+    with End_of_stream ->Printf.printf"sdfs"
+  in
+  loop fs a
 
 
-let a = compress "freq.txt" 
-let x = code a 
-let () = Array.iter(Printf.printf"%s \n") x
+let test f = 
+  let fo = open_in f in 
+  let fs = of_in_channel fo in
+  let rec loop fo = 
+    try 
+    let n = read_bit fo in 
+    begin
+    Printf.printf"%d\n" n;
+    loop fo
+    end
+  with End_of_stream -> Printf.printf"\n"
+in
+loop fs
+
+
+
+    
+  
+
+let x = char_freq "freq.txt"
+let rec loop h l n = 
+  if n = 256 then l
+  else if h.(n) != 0 then loop h (add (h.(n),Leaf(n)) l) (n+1)
+  else loop h l (n+1)
+
+let a = arbre (loop x [] 0)
+(**let () = compress "freq.txt" a**)
+
+(**let() = test "freq.txt_compressed"**)
+let () = decompress "freq.txt_compressed" a
+let() = Printf.printf"\n"
+
+
 
 
   
