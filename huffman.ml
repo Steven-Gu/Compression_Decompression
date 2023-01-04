@@ -1,6 +1,6 @@
 open Bs
 open Heap
-let decompress _ = failwith "todo"
+
 
 type tree =
 | Leaf of int
@@ -39,6 +39,28 @@ let char_freq f =
       let () = loop a l in
       x 
 
+  let rec sauvegarderArbre a os =
+    match a with
+    |Leaf(i)-> 
+      begin 
+        write_bit os 1;
+        write_byte os i
+      end
+    |Node(left,right)->
+      begin
+        write_bit os 0;
+        sauvegarderArbre left os;
+        sauvegarderArbre right os
+      end
+
+  let rec lireArbre fo =
+    let n = input_binary_int fo in
+    if n = 1 then Leaf(input_byte fo)
+    else
+      let left = lireArbre fo in
+      let right = lireArbre fo in 
+      Node(left,right)
+
   
   let compress f = 
     let h = char_freq f in
@@ -49,40 +71,44 @@ let char_freq f =
       else loop h l (n+1)
     in
     let l = loop h [] 0 in
-    let x = code (arbre l) in
+    let a = arbre l in
+    let x = code a in
     let o = open_out(f^"_compressed") in
     let os = of_out_channel(o) in
     let rec combine x s fo = 
       try
         let n = input_byte fo in
         combine x (s^x.(n)) fo
-      with End_of_file -> s
+      with End_of_stream -> s
     in
     let contenu = combine x "" fo in
-    String.iter (fun x -> (write_int os (int_of_char x)) )contenu
+    begin
+    sauvegarderArbre a os; 
+    String.iter (fun x -> (write_bit os (int_of_char x - int_of_char '0')) )contenu;
+    finalize os
+    end
 
   
   
-  let decompress f a=
+  let decompress f =
     let fo = open_in f in
     let fs = of_in_channel fo in
+    let a = lireArbre fo in
     let rec loop fs a =
       let rec loopbis fs a =
-        try 
           match a with
           |Leaf(i)->Printf.printf "%c" (char_of_int i);
           |Node(left,right)-> 
             let n = read_bit fs in
             if n = 0 then loopbis fs left
             else loopbis fs right
-        with End_of_file -> ()
       in
       try
         begin
         loopbis fs a;
         loop fs a
         end
-      with End_of_file ->()
+      with End_of_stream ->()
     in
     loop fs a
   
