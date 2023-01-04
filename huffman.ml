@@ -59,10 +59,41 @@ let char_freq f =
       with End_of_file -> s
     in
     let contenu = combine x "" fo in
-    String.iter (fun x -> (write_int os (Char.code x)) )contenu
+    String.iter (fun x -> (write_int os (int_of_char x)) )contenu
 
+  
+  
+  let decompress f a=
+    let fo = open_in f in
+    let fs = of_in_channel fo in
+    let rec loop fs a =
+      let rec loopbis fs a =
+        try 
+          match a with
+          |Leaf(i)->Printf.printf "%c" (char_of_int i);
+          |Node(left,right)-> 
+            let n = read_bit fs in
+            if n = 0 then loopbis fs left
+            else loopbis fs right
+        with End_of_file -> ()
+      in
+      try
+        begin
+        loopbis fs a;
+        loop fs a
+        end
+      with End_of_file ->()
+    in
+    loop fs a
+  
   
   
   let x = char_freq "freq.txt" 
   let () = Array.iter (Printf.printf"%d ") x
   
+
+  (* 
+  satisfaisant
+  01 10 111 011 01 101 10 011 01 10 100 111
+  s:01 a:10 t:111 i:011 f:101 n:100
+  *)
