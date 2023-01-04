@@ -1,7 +1,6 @@
 open Bs
 open Heap
 let decompress _ = failwith "todo"
-let compress _ = failwith "todo"
 
 type tree =
 | Leaf of int
@@ -39,6 +38,29 @@ let char_freq f =
       in
       let () = loop a l in
       x 
+
+  
+  let compress f = 
+    let h = char_freq f in
+    let fo = open_in(f) in
+    let rec loop h l n = 
+      if n = 256 then l
+      else if h.(n) != 0 then loop h (add (h.(n),Leaf(n)) l) (n+1)
+      else loop h l (n+1)
+    in
+    let l = loop h [] 0 in
+    let x = code (arbre l) in
+    let o = open_out(f^"_compressed") in
+    let os = of_out_channel(o) in
+    let rec combine x s fo = 
+      try
+        let n = input_byte fo in
+        combine x (s^x.(n)) fo
+      with End_of_file -> s
+    in
+    let contenu = combine x "" fo in
+    String.iter (fun x -> (write_int os (Char.code x)) )contenu
+
   
   
   let x = char_freq "freq.txt" 
