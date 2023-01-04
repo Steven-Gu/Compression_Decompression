@@ -28,8 +28,22 @@ let rec arbre h =
     let x2 = fst (remove_min (snd (remove_min h))) in
     let h0 = snd (remove_min (snd (remove_min h))) in
     arbre (add ((fst x1) + (fst x2),Node((snd x1), (snd x2))) h0) 
-    
+
+
+  let code a =
+    let x = Array.make 256 "" in
+    let l = "" in
+    let rec loop a l =
+      match a with
+      |Leaf(v)-> x.(v) <- l
+      |Node(left,right)->
+        let () = loop left ("0"^l) in loop right ("1"^l) 
+      in
+      let () = loop a l in
+      x 
+
 let compress f = 
+  let fo = open_in f in
   let h = char_freq f in 
   let rec loop h l n = 
     if n = 256 then l
@@ -37,12 +51,18 @@ let compress f =
     else loop h l (n+1)
   in
   let l = loop h [] 0 in
-  arbre l
+  let x = code (arbre l) in
+  let rec loop0 x s fo = 
+    try
+      let n = input_byte fo in
+      x.(n)
+      loop x  fo
+    with End_of_file -> s
 
 
-  
-let x = char_freq "freq.txt" 
-let () = Array.iter (Printf.printf"%d ") x
+let a = compress "freq.txt" 
+let x = code a 
+let () = Array.iter(Printf.printf"%s \n") x
 
 
   
