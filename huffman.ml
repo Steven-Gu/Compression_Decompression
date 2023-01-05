@@ -82,6 +82,7 @@ let rec arbre h =
               with End_of_file ->()
             in
             begin
+            sauvegarderArbre a os;
             loop0 x fo os;
             finalize os
             end
@@ -93,32 +94,28 @@ let rec arbre h =
               let fo = open_in f in
               let fs = of_in_channel fo in
               let a = lireArbre fs in
-              let o = open_out("new.txt") in
+              let o = open_out "new.txt" in
               let os = of_out_channel o in
-              let rec loop fs a =
-                let rec loopbis fs a =
+              let rec loop fs os a =
+                let rec loopbis fs os a =
                     match a with
-                    |Leaf(i)->
-                      begin
-                      Printf.printf "%c" (char_of_int i);
-                      write_byte os i
-                      end
+                    |Leaf(i)->write_byte os i;
                     |Node(left,right)-> 
                       let n = read_bit fs in
-                      if n = 0 then loopbis fs left
-                      else loopbis fs right
+                      if n = 0 then loopbis fs os left
+                      else loopbis fs os right
                 in
                 try
                   begin
-                  loopbis fs a;
-                  loop fs a
+                  loopbis fs os a;
+                  loop fs os a
                   end
-                with End_of_stream -> finalize os
+                with End_of_stream ->()
               in
-              begin
-              loop fs a;
-              Printf.printf"\n"
-              end
+              loop fs os a;
+              finalize os
+            
+          
           
 
 
