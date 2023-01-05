@@ -34,17 +34,20 @@ let char_freq f =
       match a with
       |Leaf(v)-> x.(v) <- l
       |Node(left,right)->
-        let () = loop left ("0"^l) in loop right ("1"^l) 
+         begin
+          loop left (l^"0");
+          loop right (l^"1")
+        end 
       in
       let () = loop a l in
-      x 
+    x 
 
   let rec sauvegarderArbre a os =
     match a with
     |Leaf(i)-> 
       begin 
         write_bit os 1;
-        write_byte os i
+        write_int os i
       end
     |Node(left,right)->
       begin
@@ -54,8 +57,8 @@ let char_freq f =
       end
 
   let rec lireArbre fo =
-    let n = input_binary_int fo in
-    if n = 1 then Leaf(input_byte fo)
+    let n = read_bit fo in
+    if n = 1 then Leaf(read_int fo)
     else
       let left = lireArbre fo in
       let right = lireArbre fo in 
@@ -79,7 +82,7 @@ let char_freq f =
       try
         let n = input_byte fo in
         combine x (s^x.(n)) fo
-      with End_of_stream -> s
+      with End_of_file -> s
     in
     let contenu = combine x "" fo in
     begin
@@ -93,7 +96,7 @@ let char_freq f =
   let decompress f =
     let fo = open_in f in
     let fs = of_in_channel fo in
-    let a = lireArbre fo in
+    let a = lireArbre fs in
     let rec loop fs a =
       let rec loopbis fs a =
           match a with
@@ -112,14 +115,3 @@ let char_freq f =
     in
     loop fs a
   
-  
-  
-  let x = char_freq "freq.txt" 
-  let () = Array.iter (Printf.printf"%d ") x
-  
-
-  (* 
-  satisfaisant
-  01 10 111 011 01 101 10 011 01 10 100 111
-  s:01 a:10 t:111 i:011 f:101 n:100
-  *)
