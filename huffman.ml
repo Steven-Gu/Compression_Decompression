@@ -43,7 +43,7 @@ let rec sauvegarderArbre a os =
   |Leaf(i)-> 
     begin 
       write_bit os 1;
-      write_int os i
+      write_byte os i
     end
   |Node(left,right)->
     begin
@@ -54,7 +54,7 @@ let rec sauvegarderArbre a os =
 
 let rec lireArbre fo =
   let n = read_bit fo in
-  if n = 1 then Leaf(read_int fo)
+  if n = 1 then Leaf(read_byte fo)
   else
     let left = lireArbre fo in
     let right = lireArbre fo in 
@@ -115,39 +115,20 @@ let decompress f =
   in
   begin
   loop fs os a;
-  finalize os;
   close_in fo;
-  close_out o
+  close_out o;
   end
       
     
-    
-
-
-let test f = 
-  let fo = open_in f in 
-  let fs = of_in_channel fo in
-  let rec loop fo = 
-    try 
-    let n = read_bit fo in 
-    begin
-    Printf.printf"%d\n" n;
-    loop fo
-    end
-  with End_of_stream -> Printf.printf"\n"
-in
-loop fs
-
-
-let testarbre f = 
-  let h = char_freq f in
+let testarbre a = 
+  (*let h = char_freq (open_in f) in
   let rec loop h l n = 
     if n = 256 then l
     else if h.(n) != 0 then loop h (add (h.(n),Leaf(n)) l) (n+1)
     else loop h l (n+1)
   in
   let l = loop h [] 0 in
-  let a = arbre l in
+  let a = arbre l in*)
   let x = code a in
   let rec loop0 x n =
     if n = 256 then ()
@@ -161,6 +142,22 @@ let testarbre f =
     in
   loop0 x 0
 
+
+let test f = 
+  let fo = open_in f in 
+  let fs = of_in_channel fo in
+  let a = lireArbre fs in
+  let () = testarbre a in
+  let rec loop fo = 
+    try 
+    let n = read_bit fo in 
+    begin
+    Printf.printf"%d" n;
+    loop fo
+    end
+  with End_of_stream -> Printf.printf"\n"
+in
+loop fs
 (*let () = testarbre "freq.txt"*)
 
 
