@@ -6,10 +6,8 @@ type tree =
     | Node of tree*tree
 
     
-let char_freq f =
+let char_freq fo =
 let x = Array.make 256 0 in
-let fo = open_in f in
-(*let fs = of_in_channel fo in*)
 let rec loop x is =
   try
     let n = input_byte is in
@@ -18,6 +16,8 @@ let rec loop x is =
   with End_of_file-> x 
 in
 loop x fo
+
+
  
 let rec arbre h = 
   if is_singleton h then snd(List.hd h)
@@ -62,7 +62,7 @@ let rec lireArbre fo =
 
 
 let compress f = 
-  let h = char_freq f in
+  let h = char_freq (open_in f) in
   let fo = open_in(f) in
   let rec loop h l n = 
     if n = 256 then l
@@ -72,7 +72,7 @@ let compress f =
   let l = loop h [] 0 in
   let a = arbre l in
   let x = code a in
-  let o = open_out(f^"_c") in
+  let o = open_out(f^".hf") in
   let os = of_out_channel(o) in
   let rec loop0 x fo os = 
     try
@@ -84,7 +84,9 @@ let compress f =
   begin
   sauvegarderArbre a os;
   loop0 x fo os;
-  finalize os
+  finalize os;
+  close_in fo;
+  close_out o
   end
 
 
@@ -93,7 +95,7 @@ let decompress f =
   let fo = open_in f in
   let fs = of_in_channel fo in
   let a = lireArbre fs in
-  let o = open_out "new.txt" in
+  let o = open_out (f^"_decompressed.txt") in
   let os = of_out_channel o in
   let rec loop fs os a =
     let rec loopbis fs os a =
@@ -111,8 +113,12 @@ let decompress f =
       end
     with End_of_stream ->()
   in
+  begin
   loop fs os a;
-  finalize os
+  finalize os;
+  close_in fo;
+  close_out o
+  end
       
     
     
