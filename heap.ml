@@ -1,11 +1,25 @@
 
-type 'a t = 'a list (* remplacer par une définition qui vous convient *)
+type 'a t = 'a list
 
 let empty = []
 
-let is_singleton _ = failwith "todo"
-let is_empty _ = failwith "todo"
-let add _ _ = failwith "todo"
-let find_min _ = failwith "todo"
+let is_singleton h = 
+  match h with 
+  []-> false
+  |_::[] -> true
+  |_::_ -> false
 
-let remove_min _ = failwith "todo"
+let is_empty h =  h = empty 
+
+let rec add e h = 
+  match h with
+  |[] -> e::h
+  |p::ll -> if compare e p < 0 then e::p::ll
+  else p:: add e ll
+  
+  
+let find_min h = 
+  List.hd h 
+
+let remove_min h =  
+  (List.hd h, List.tl h)
